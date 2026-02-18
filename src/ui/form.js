@@ -168,7 +168,19 @@ export function setupControls() {
 		overlaySizeButtons.forEach(btn => {
 			btn.addEventListener('click', (e) => {
 				const size = btn.dataset.size;
-				updateState({ overlaySize: size });
+				if (size === 'none') {
+					updateState({ overlaySize: size, overlayBgType: 'none' });
+					overlayBgButtons.forEach(b => {
+						b.disabled = true;
+						b.classList.add('opacity-50', 'pointer-events-none');
+					});
+				} else {
+					updateState({ overlaySize: size });
+					overlayBgButtons.forEach(b => {
+						b.disabled = false;
+						b.classList.remove('opacity-50', 'pointer-events-none');
+					});
+				}
 			});
 		});
 	}
@@ -214,6 +226,13 @@ export function setupControls() {
 		if (overlayBgButtons && overlayBgButtons.length) {
 			overlayBgButtons.forEach(b => {
 				const style = b.dataset.bg;
+				if (currentState.overlaySize === 'none') {
+					b.disabled = true;
+					b.classList.add('opacity-50', 'pointer-events-none');
+				} else {
+					b.disabled = false;
+					b.classList.remove('opacity-50', 'pointer-events-none');
+				}
 				if (style === (currentState.overlayBgType || 'solid')) {
 					b.classList.add('bg-accent', 'text-white');
 					b.classList.remove('bg-slate-50');
@@ -319,6 +338,16 @@ export function updatePreviewStyles(currentState) {
 		const size = currentState.overlaySize || 'medium';
 		if (size === 'none') {
 			overlay.style.display = 'none';
+			if (overlayBg) {
+				overlayBg.style.display = 'none';
+				overlayBg.style.backdropFilter = '';
+				overlayBg.style.webkitBackdropFilter = '';
+			}
+			if (vignetteOverlay) {
+				vignetteOverlay.style.display = 'none';
+				vignetteOverlay.style.opacity = '0';
+				vignetteOverlay.style.background = '';
+			}
 		} else {
 			overlay.style.display = '';
 			const isMobile = window.innerWidth < 768;
