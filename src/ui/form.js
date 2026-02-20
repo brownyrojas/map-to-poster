@@ -264,13 +264,15 @@ export function setupControls() {
 		const name = item.dataset.name;
 		const country = item.dataset.country;
 
-		if (!cityOverrideInput || !cityOverrideInput.value.trim()) {
-			updateState({ city: name.toUpperCase() });
-		}
-		if (!countryOverrideInput || !countryOverrideInput.value.trim()) {
-			updateState({ country: country ? country.toUpperCase() : '' });
-		}
-		updateState({ lat, lon, markerLat: lat, markerLon: lon });
+		updateState({
+			city: (name || '').toUpperCase(),
+			country: (country || '').toUpperCase(),
+			lat,
+			lon,
+			markerLat: lat,
+			markerLon: lon
+		});
+
 		updateMapPosition(lat, lon);
 
 		searchInput.value = name;
