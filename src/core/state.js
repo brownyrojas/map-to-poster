@@ -35,6 +35,10 @@ export const defaultState = {
 	markerLon: 106.8456,
 	markerIcon: 'pin',
 	markerSize: 1,
+	overlayX: 0.5,
+	overlayY: 0.85,
+	showCountry: true,
+	showCoords: true,
 };
 
 export const state = { ...defaultState };
@@ -67,7 +71,11 @@ const SAVED_KEYS = [
 	'markerLat',
 	'markerLon',
 	'markerIcon',
-	'markerSize'
+	'markerSize',
+	'overlayX',
+	'overlayY',
+	'showCountry',
+	'showCoords'
 ];
 
 function loadSettings() {
