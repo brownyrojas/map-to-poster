@@ -322,6 +322,20 @@ export function setupControls() {
 		});
 	}
 
+	const toggleCountryBtn = document.getElementById('toggle-country-btn');
+	if (toggleCountryBtn) {
+		toggleCountryBtn.addEventListener('click', () => {
+			updateState({ showCountry: !state.showCountry });
+		});
+	}
+
+	const toggleCoordsBtn = document.getElementById('toggle-coords-btn');
+	if (toggleCoordsBtn) {
+		toggleCoordsBtn.addEventListener('click', () => {
+			updateState({ showCoords: !state.showCoords });
+		});
+	}
+
 	if (cityFontSelect) {
 		cityFontSelect.addEventListener('change', (e) => {
 			updateState({ cityFont: e.target.value });
@@ -476,12 +490,131 @@ export function setupControls() {
 		});
 	}
 
+	const overlayPosBtns = document.querySelectorAll('.overlay-pos-btn');
+	overlayPosBtns.forEach(btn => {
+		btn.addEventListener('click', () => {
+			const x = parseFloat(btn.dataset.overlayX);
+			const y = parseFloat(btn.dataset.overlayY);
+			updateState({ overlayX: x, overlayY: y });
+		});
+	});
+
+	const resetOverlayPosBtn = document.getElementById('reset-overlay-pos-btn');
+	if (resetOverlayPosBtn) {
+		resetOverlayPosBtn.addEventListener('click', () => {
+			updateState({ overlayX: 0.5, overlayY: 0.85 });
+		});
+	}
+
+	const draggableOverlay = document.getElementById('poster-overlay');
+	const posterContainerForDrag = document.getElementById('poster-container');
+
+	if (draggableOverlay && posterContainerForDrag) {
+		let isDragging = false;
+		let dragStartClientX = 0;
+		let dragStartClientY = 0;
+		let dragStartOverlayX = 0.5;
+		let dragStartOverlayY = 0.85;
+
+		const startDrag = (clientX, clientY) => {
+			if (state.overlaySize === 'none') return;
+			isDragging = true;
+			dragStartClientX = clientX;
+			dragStartClientY = clientY;
+			dragStartOverlayX = state.overlayX !== undefined ? state.overlayX : 0.5;
+			dragStartOverlayY = state.overlayY !== undefined ? state.overlayY : 0.85;
+			draggableOverlay.style.cursor = 'grabbing';
+			document.body.style.userSelect = 'none';
+		};
+
+		const doDrag = (clientX, clientY) => {
+			if (!isDragging) return;
+			const rect = posterContainerForDrag.getBoundingClientRect();
+			const dx = (clientX - dragStartClientX) / rect.width;
+			const dy = (clientY - dragStartClientY) / rect.height;
+
+			const EDGE = 8;
+			const cW = posterContainerForDrag.offsetWidth;
+			const cH = posterContainerForDrag.offsetHeight;
+			const oW = draggableOverlay.offsetWidth;
+			const oH = draggableOverlay.offsetHeight;
+			const minX = cW > 0 && oW > 0 ? (oW / 2 + EDGE) / cW : 0.05;
+			const maxX = cW > 0 && oW > 0 ? 1 - (oW / 2 + EDGE) / cW : 0.95;
+			const minY = cH > 0 && oH > 0 ? (oH / 2 + EDGE) / cH : 0.05;
+			const maxY = cH > 0 && oH > 0 ? 1 - (oH / 2 + EDGE) / cH : 0.95;
+
+			const newX = Math.max(minX, Math.min(maxX, dragStartOverlayX + dx));
+			const newY = Math.max(minY, Math.min(maxY, dragStartOverlayY + dy));
+			updateState({ overlayX: newX, overlayY: newY });
+		};
+
+		const endDrag = () => {
+			if (!isDragging) return;
+			isDragging = false;
+			draggableOverlay.style.cursor = '';
+			document.body.style.userSelect = '';
+		};
+
+		draggableOverlay.addEventListener('mousedown', (e) => {
+			startDrag(e.clientX, e.clientY);
+			e.preventDefault();
+		});
+		document.addEventListener('mousemove', (e) => doDrag(e.clientX, e.clientY));
+		document.addEventListener('mouseup', endDrag);
+
+		draggableOverlay.addEventListener('touchstart', (e) => {
+			if (e.touches.length === 1) {
+				startDrag(e.touches[0].clientX, e.touches[0].clientY);
+				e.preventDefault();
+			}
+		}, { passive: false });
+		document.addEventListener('touchmove', (e) => {
+			if (isDragging && e.touches.length === 1) {
+				doDrag(e.touches[0].clientX, e.touches[0].clientY);
+				e.preventDefault();
+			}
+		}, { passive: false });
+		document.addEventListener('touchend', endDrag);
+	}
+
 	return (currentState) => {
 		if (cityOverrideInput) cityOverrideInput.value = currentState.cityOverride || '';
 		if (countryOverrideInput) countryOverrideInput.value = currentState.countryOverride || '';
 		if (cityFontSelect) cityFontSelect.value = currentState.cityFont;
 		if (countryFontSelect) countryFontSelect.value = currentState.countryFont;
 		if (coordsFontSelect) coordsFontSelect.value = currentState.coordsFont;
+
+		const EYE_OPEN_SVG = `<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
+		const EYE_OFF_SVG = `<svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>`;
+
+		const toggleCountryBtnSync = document.getElementById('toggle-country-btn');
+		if (toggleCountryBtnSync) {
+			toggleCountryBtnSync.innerHTML = (currentState.showCountry !== false) ? EYE_OPEN_SVG : EYE_OFF_SVG;
+		}
+		const toggleCoordsBtnSync = document.getElementById('toggle-coords-btn');
+		if (toggleCoordsBtnSync) {
+			toggleCoordsBtnSync.innerHTML = (currentState.showCoords !== false) ? EYE_OPEN_SVG : EYE_OFF_SVG;
+		}
+
+		const overlayPosBtnsSync = document.querySelectorAll('.overlay-pos-btn');
+		const curX = currentState.overlayX !== undefined ? currentState.overlayX : 0.5;
+		const curY = currentState.overlayY !== undefined ? currentState.overlayY : 0.85;
+		const TOLERANCE = 0.02;
+		overlayPosBtnsSync.forEach(btn => {
+			const bx = parseFloat(btn.dataset.overlayX);
+			const by = parseFloat(btn.dataset.overlayY);
+			const isActive = Math.abs(curX - bx) < TOLERANCE && Math.abs(curY - by) < TOLERANCE;
+			const dot = btn.querySelector('.pos-dot');
+			if (isActive) {
+				btn.classList.add('border-accent', 'bg-accent-light');
+				btn.classList.remove('border-slate-100', 'bg-slate-50');
+				if (dot) { dot.classList.add('bg-accent'); dot.classList.remove('bg-slate-300'); }
+			} else {
+				btn.classList.remove('border-accent', 'bg-accent-light');
+				btn.classList.add('border-slate-100', 'bg-slate-50');
+				if (dot) { dot.classList.remove('bg-accent'); dot.classList.add('bg-slate-300'); }
+			}
+		});
 
 		latInput.value = currentState.lat.toFixed(6);
 		lonInput.value = currentState.lon.toFixed(6);
@@ -731,12 +864,14 @@ export function updatePreviewStyles(currentState) {
 		displayCountry.textContent = (currentState.countryOverride && currentState.countryOverride.length) ? currentState.countryOverride : currentState.country;
 		displayCountry.style.color = activeTheme.text || activeTheme.textColor;
 		displayCountry.style.fontFamily = currentState.countryFont;
-		displayCountry.style.display = (displayCountry.textContent) ? 'block' : 'none';
+		const countryHasText = !!displayCountry.textContent;
+		displayCountry.style.display = (currentState.showCountry !== false && countryHasText) ? 'block' : 'none';
 	}
 
 	displayCoords.textContent = formatCoords(currentState.lat, currentState.lon);
 	displayCoords.style.color = activeTheme.text || activeTheme.textColor;
 	displayCoords.style.fontFamily = currentState.coordsFont;
+	displayCoords.style.display = (currentState.showCoords !== false) ? '' : 'none';
 
 	if (overlay) {
 		const size = currentState.overlaySize || 'medium';
@@ -776,14 +911,28 @@ export function updatePreviewStyles(currentState) {
 			if (displayCountry) displayCountry.style.fontSize = `${countrySize}px`;
 			displayCoords.style.fontSize = `${coordsSize}px`;
 
-			if (matEnabled) {
-				overlay.style.left = `${matWidth}px`;
-				overlay.style.right = `${matWidth}px`;
-				overlay.style.bottom = `${matWidth}px`;
-			} else {
-				overlay.style.left = '0';
-				overlay.style.right = '0';
-				overlay.style.bottom = '0';
+			const overlayX = currentState.overlayX !== undefined ? currentState.overlayX : 0.5;
+			const overlayY = currentState.overlayY !== undefined ? currentState.overlayY : 0.85;
+			overlay.style.right = '';
+			overlay.style.bottom = '';
+			overlay.style.transform = 'translate(-50%, -50%)';
+			overlay.style.maxWidth = '90%';
+			overlay.style.width = '';
+
+			overlay.style.left = `${overlayX * 100}%`;
+			overlay.style.top = `${overlayY * 100}%`;
+			{
+				const EDGE = 8; 
+				const cW = posterContainer.offsetWidth;
+				const cH = posterContainer.offsetHeight;
+				const oW = overlay.offsetWidth;
+				const oH = overlay.offsetHeight;
+				if (cW > 0 && cH > 0 && oW > 0 && oH > 0) {
+					const cx = Math.max((oW / 2 + EDGE) / cW, Math.min(1 - (oW / 2 + EDGE) / cW, overlayX));
+					const cy = Math.max((oH / 2 + EDGE) / cH, Math.min(1 - (oH / 2 + EDGE) / cH, overlayY));
+					overlay.style.left = `${cx * 100}%`;
+					overlay.style.top = `${cy * 100}%`;
+				}
 			}
 
 			const bgType = currentState.overlayBgType || 'vignette';
@@ -808,7 +957,12 @@ export function updatePreviewStyles(currentState) {
 			}
 		}
 	}
-	if (divider) divider.style.backgroundColor = activeTheme.text || activeTheme.textColor;
+	if (divider) {
+		divider.style.backgroundColor = activeTheme.text || activeTheme.textColor;
+		const countryVisible = currentState.showCountry !== false && !!(displayCountry && displayCountry.textContent);
+		const coordsVisible = currentState.showCoords !== false;
+		divider.style.display = (countryVisible || coordsVisible) ? '' : 'none';
+	}
 	if (attribution) {
 		attribution.style.color = activeTheme.text || activeTheme.textColor;
 		attribution.style.right = `${matWidth + 12}px`;

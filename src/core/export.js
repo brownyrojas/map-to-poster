@@ -297,37 +297,46 @@ export async function exportToPNG(element, filename, statusElement, options = {}
 						vignette.style.pointerEvents = 'none';
 						vignette.style.zIndex = '5';
 
-						if (state.overlayBgType === 'vignette') {
-							vignette.style.display = 'block';
-							vignette.style.opacity = '1';
-							const colorSolid = hexToRgba(themeColor, 1);
-							const colorTrans = hexToRgba(themeColor, 0);
-							vignette.style.background = `linear-gradient(to bottom, ${colorSolid} 0%, ${colorSolid} 3%, ${colorTrans} 20%, ${colorTrans} 80%, ${colorSolid} 97%, ${colorSolid} 100%)`;
-						} else {
-							vignette.style.display = 'none';
-						}
+				if (state.overlayBgType === 'vignette') {
+					vignette.style.display = 'block';
+					vignette.style.opacity = '1';
+					const colorSolid = hexToRgba(themeColor, 1);
+					const colorTrans = hexToRgba(themeColor, 0);
+					vignette.style.background = `linear-gradient(to bottom, ${colorSolid} 0%, ${colorSolid} 3%, ${colorTrans} 20%, ${colorTrans} 80%, ${colorSolid} 97%, ${colorSolid} 100%)`;
+				} else {
+					vignette.style.display = 'none';
+				}
 					}
 				}
 
 				const overlay = clonedDoc.querySelector('#poster-overlay');
 				if (overlay) {
-					overlay.style.transform = 'none';
 					overlay.style.position = 'absolute';
-
-					const matEnabled = state.matEnabled;
-					const matWidthLogical = matEnabled ? (state.matWidth / scale) : 0;
-					const liftOffset = 20 / scale;
-
-					if (matEnabled) {
-						overlay.style.left = `${matWidthLogical}px`;
-						overlay.style.right = `${matWidthLogical}px`;
-						overlay.style.bottom = `${matWidthLogical + liftOffset}px`;
-					} else {
-						overlay.style.left = '0';
-						overlay.style.right = '0';
-						overlay.style.bottom = `${liftOffset}px`;
-					}
+					overlay.style.right = '';
+					overlay.style.bottom = '';
+					overlay.style.transform = 'translate(-50%, -50%)';
+					overlay.style.maxWidth = '90%';
+					overlay.style.width = '';
 					overlay.style.zIndex = '10';
+
+					const overlayX = state.overlayX !== undefined ? state.overlayX : 0.5;
+					const overlayY = state.overlayY !== undefined ? state.overlayY : 0.85;
+
+					overlay.style.left = `${overlayX * 100}%`;
+					overlay.style.top = `${overlayY * 100}%`;
+					{
+						const EDGE = 8;
+						const cW = logicalContainerWidth;
+						const cH = logicalContainerHeight;
+						const oW = overlay.offsetWidth;
+						const oH = overlay.offsetHeight;
+						if (cW > 0 && cH > 0 && oW > 0 && oH > 0) {
+							const cx = Math.max((oW / 2 + EDGE) / cW, Math.min(1 - (oW / 2 + EDGE) / cW, overlayX));
+							const cy = Math.max((oH / 2 + EDGE) / cH, Math.min(1 - (oH / 2 + EDGE) / cH, overlayY));
+							overlay.style.left = `${cx * 100}%`;
+							overlay.style.top = `${cy * 100}%`;
+						}
+					}
 
 					const clonedOverlayBg = clonedDoc.querySelector('.overlay-bg');
 					if (clonedOverlayBg && clonedContainer) {
@@ -357,6 +366,7 @@ export async function exportToPNG(element, filename, statusElement, options = {}
 					country.style.transform = 'none';
 					country.style.color = textColor;
 					country.style.fontFamily = state.countryFont;
+					if (state.showCountry === false) country.style.display = 'none';
 				}
 
 				const coords = clonedDoc.querySelector('#display-coords');
@@ -364,6 +374,7 @@ export async function exportToPNG(element, filename, statusElement, options = {}
 					coords.style.transform = 'none';
 					coords.style.color = textColor;
 					coords.style.fontFamily = state.coordsFont;
+					if (state.showCoords === false) coords.style.display = 'none';
 				}
 
 				const attr = clonedDoc.querySelector('#poster-attribution');
@@ -380,6 +391,9 @@ export async function exportToPNG(element, filename, statusElement, options = {}
 				if (clonedDivider) {
 					clonedDivider.style.transform = 'none';
 					clonedDivider.style.backgroundColor = textColor;
+					if (state.showCountry === false && state.showCoords === false) {
+						clonedDivider.style.display = 'none';
+					}
 
 					const defaultDividerOffsets = { small: 32, medium: 40, large: 56 };
 					const opts = Object.assign({}, options || {});
