@@ -6,6 +6,26 @@
 	--accent-color-rgb: 15, 23, 42;
 }
 
+body {
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+body.loaded {
+	opacity: 1;
+}
+
+@media (max-width: 768px) {
+	.sidebar-open aside {
+		transform: translateX(0);
+	}
+
+	.sidebar-open .sidebar-overlay {
+		opacity: 1;
+		pointer-events: auto;
+	}
+}
+
 .bg-accent {
 	background-color: rgb(var(--accent-color-rgb)) !important;
 }
@@ -80,11 +100,11 @@
 		@apply absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-all duration-300 shadow-sm;
 	}
 
-	input:checked + .toggle-pill {
+	input:checked+.toggle-pill {
 		@apply bg-accent;
 	}
 
-	input:checked + .toggle-pill::after {
+	input:checked+.toggle-pill::after {
 		@apply translate-x-5;
 	}
 
@@ -131,15 +151,16 @@
 	@apply opacity-100 pointer-events-auto;
 }
 
-#presets-modal.show > div:last-child,
-#credits-modal.show > div:last-child,
-#artistic-modal.show > div:last-child {
+#presets-modal.show>div:last-child,
+#credits-modal.show>div:last-child,
+#artistic-modal.show>div:last-child {
 	@apply scale-100;
 }
 
 .no-scrollbar::-webkit-scrollbar {
 	display: none;
 }
+
 .no-scrollbar {
 	-ms-overflow-style: none;
 	scrollbar-width: none;
@@ -177,4 +198,43 @@
 	top: -100%;
 	@apply rounded-full bg-accent opacity-50;
 	animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.logo-pulse {
+	transform-origin: center;
+	will-change: transform;
+	animation: logoTilt 10s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.group:hover .logo-pulse,
+.logo-pulse:hover {
+	animation-play-state: paused;
+}
+
+@keyframes logoTilt {
+
+	0%,
+	5% {
+		transform: rotate(0deg) translateX(0);
+	}
+
+	6% {
+		transform: rotate(-9deg) translateX(-3px);
+	}
+
+	7.5% {
+		transform: rotate(9deg) translateX(3px);
+	}
+
+	9% {
+		transform: rotate(-5deg) translateX(-1.5px);
+	}
+
+	10% {
+		transform: rotate(0deg) translateX(0);
+	}
+
+	100% {
+		transform: rotate(0deg) translateX(0);
+	}
 }

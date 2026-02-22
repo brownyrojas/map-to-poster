@@ -24,7 +24,7 @@ export const defaultState = {
 	overlaySize: 'medium',
 	showLabels: true,
 	renderMode: 'tile',
-	artisticTheme: 'arctic_frost',
+	artisticTheme: 'cyber_noir',
 	matEnabled: false,
 	matWidth: 40,
 	matShowBorder: true,
@@ -126,5 +126,5 @@ export function getSelectedTheme() {
 }
 
 export function getSelectedArtisticTheme() {
-	return artisticThemes[state.artisticTheme] || artisticThemes.arctic_frost;
+	return artisticThemes[state.artisticTheme] || artisticThemes.cyber_noir;
 }

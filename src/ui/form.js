@@ -223,26 +223,33 @@ export function setupControls() {
 	function populateArtisticModal() {
 		if (!artisticModalContent) return;
 		const mainKeys = new Set(['cyber_noir', 'golden_era', 'mangrove_maze']);
-		artisticModalContent.innerHTML = Object.entries(artisticThemes)
+		const itemsHtml = Object.entries(artisticThemes)
 			.filter(([k]) => !mainKeys.has(k))
 			.map(([key, t]) => {
 				const candidates = [t.road_motorway, t.road_primary, t.road_secondary, t.road_tertiary, t.text, t.bg];
 				const p = candidates.map(c => c || '#cccccc').slice(0, 4);
 				return `
-					<button class="artistic-modal-item group w-full flex items-center p-4 border border-slate-100 rounded-2xl hover:shadow-xl transition-all" data-key="${key}">
-						<div class="flex -space-x-2 mr-4">
-							<span class="w-6 h-6 rounded-full ring-1 ring-white" style="background:${p[0]}"></span>
-							<span class="w-6 h-6 rounded-full ring-1 ring-white" style="background:${p[1]}"></span>
-							<span class="w-6 h-6 rounded-full ring-1 ring-white" style="background:${p[2]}"></span>
-							<span class="w-6 h-6 rounded-full ring-1 ring-white" style="background:${p[3]}"></span>
-						</div>
-						<div class="text-left">
-							<div class="text-sm font-semibold text-slate-900">${t.name || key}</div>
-							<div class="text-[10px] text-slate-400 mt-1">${t.description || ''}</div>
-						</div>
-					</button>
+						<button class="artistic-modal-item group w-full flex items-center p-4 border border-slate-100 rounded-2xl hover:shadow-xl transition-all" data-key="${key}">
+							<div class="flex -space-x-2 mr-4">
+								<span class="w-6 h-6 rounded-full ring-1 ring-white" style="background:${p[0]}"></span>
+								<span class="w-6 h-6 rounded-full ring-1 ring-white" style="background:${p[1]}"></span>
+								<span class="w-6 h-6 rounded-full ring-1 ring-white" style="background:${p[2]}"></span>
+								<span class="w-6 h-6 rounded-full ring-1 ring-white" style="background:${p[3]}"></span>
+							</div>
+							<div class="text-left">
+								<div class="text-sm font-semibold text-slate-900">${t.name || key}</div>
+								<div class="text-[10px] text-slate-400 mt-1">${t.description || ''}</div>
+							</div>
+						</button>
 				`;
 			}).join('\n');
+
+		artisticModalContent.innerHTML = `
+			<div class="mb-4">
+				<input id="artistic-search" type="search" placeholder="Search themes..." class="w-full input-field" />
+			</div>
+			<div class="space-y-2">${itemsHtml}</div>
+		`;
 
 		artisticModalContent.querySelectorAll('.artistic-modal-item').forEach(btn => {
 			btn.addEventListener('click', () => {
@@ -255,30 +262,54 @@ export function setupControls() {
 				if (artisticModal) artisticModal.classList.remove('show');
 			});
 		});
+
+		const artSearch = document.getElementById('artistic-search');
+		let artSearchTimeout = null;
+		if (artSearch) {
+			artSearch.addEventListener('input', (e) => {
+				clearTimeout(artSearchTimeout);
+				const q = (e.target.value || '').trim().toLowerCase();
+				artSearchTimeout = setTimeout(() => {
+					artisticModalContent.querySelectorAll('.artistic-modal-item').forEach(it => {
+						const txt = (it.innerText || '').toLowerCase();
+						it.style.display = q ? (txt.indexOf(q) !== -1 ? '' : 'none') : '';
+					});
+				}, 120);
+			});
+		}
 	}
 
 	function populateModal() {
 		if (!modalContent) return;
-		modalContent.innerHTML = Object.entries(outputPresets).map(([key, presets]) => `
-      <div class="space-y-4">
+		const groupsHtml = Object.entries(outputPresets)
+			.filter(([key, presets]) => Array.isArray(presets) && presets.length > 0)
+			.map(([key, presets]) => `
+			<div class="space-y-4 preset-group">
         <div class="flex items-center space-x-3">
           <div class="w-1 h-5 bg-accent rounded-full"></div>
           <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">${key.replace('_', ' ')}</h3>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           ${presets.map(p => {
-			const isActive = state.width === p.width && state.height === p.height;
-			return `
+				const isActive = state.width === p.width && state.height === p.height;
+				return `
               <button class="modal-preset-btn group flex flex-col items-start p-4 border ${isActive ? 'border-accent bg-accent-light' : 'border-slate-100 bg-slate-50/50'} rounded-2xl hover:border-accent hover:bg-white hover:shadow-xl transition-all text-left" 
                       data-width="${p.width}" data-height="${p.height}">
                 <span class="text-[11px] font-bold ${isActive ? 'text-accent' : 'text-slate-800'} group-hover:text-accent transition-colors">${p.name}</span>
                 <span class="text-[9px] ${isActive ? 'text-accent/60' : 'text-slate-400'} font-bold mt-1 uppercase tracking-tight">${p.width} × ${p.height} px</span>
               </button>
             `;
-		}).join('')}
+			}).join('')}
         </div>
       </div>
     `).join('');
+
+		modalContent.innerHTML = `
+			<div class="mb-4">
+				<input id="preset-search" type="search" placeholder="Search sizes or preset names..." class="w-full input-field" />
+			</div>
+			<div class="space-y-6">${groupsHtml}</div>
+		`;
 
 		modalContent.querySelectorAll('.modal-preset-btn').forEach(btn => {
 			btn.addEventListener('click', () => {
@@ -288,6 +319,28 @@ export function setupControls() {
 				presetsModal.classList.remove('show');
 			});
 		});
+
+		const presetSearch = document.getElementById('preset-search');
+		let presetSearchTimeout = null;
+		if (presetSearch) {
+			presetSearch.addEventListener('input', (e) => {
+				clearTimeout(presetSearchTimeout);
+				const q = (e.target.value || '').trim().toLowerCase();
+				presetSearchTimeout = setTimeout(() => {
+					modalContent.querySelectorAll('.modal-preset-btn').forEach(btn => {
+						const txt = (btn.innerText || '').toLowerCase();
+						const dims = `${btn.dataset.width} ${btn.dataset.height}`;
+						const match = q ? (txt.indexOf(q) !== -1 || dims.indexOf(q) !== -1) : true;
+						btn.style.display = match ? '' : 'none';
+					});
+
+					modalContent.querySelectorAll('.preset-group').forEach(group => {
+						const anyVisible = Array.from(group.querySelectorAll('.modal-preset-btn')).some(b => b.style.display !== 'none');
+						group.style.display = anyVisible ? '' : 'none';
+					});
+				}, 120);
+			});
+		}
 	}
 
 	let searchTimeout;

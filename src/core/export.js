@@ -1,25 +1,8 @@
 import html2canvas from 'html2canvas';
 import { getMapInstance, getArtisticMapInstance } from '../map/map-init.js';
 import { state, getSelectedTheme, getSelectedArtisticTheme } from './state.js';
+import { markerIcons as markerIcons } from './marker-icons.js';
 import { hexToRgba } from './utils.js';
-
-const MARKER_ICONS_EXPORT = {
-	pin: `<svg width="100" height="100" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-			<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-		</svg>`,
-	circle: `<svg width="100" height="100" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-			<path fill-rule="evenodd" clip-rule="evenodd" d="M12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4ZM12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9Z" />
-		</svg>`,
-	heart: `<svg width="100" height="100" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-			<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-		</svg>`,
-	star: `<svg width="100" height="100" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-			<path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-		</svg>`,
-	none: `<svg width="100" height="100" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-			<circle cx="12" cy="12" r="2" />
-		</svg>`
-};
 
 function project(lat, lon, scale) {
 	const siny = Math.sin(lat * Math.PI / 180);
@@ -148,7 +131,7 @@ async function drawMarkerToCtx(ctx, x, y, color) {
 	const iconType = state.markerIcon || 'pin';
 	const baseSize = 40;
 	const size = Math.round(baseSize * (state.markerSize || 1));
-	const svgString = MARKER_ICONS_EXPORT[iconType] || MARKER_ICONS_EXPORT.pin;
+	const svgString = markerIcons[iconType] || markerIcons.pin;
 	const svg = svgString
 		.replace('currentColor', color)
 		.replace('width="100"', `width="${size}"`)
@@ -172,9 +155,6 @@ async function drawMarkerToCtx(ctx, x, y, color) {
 export async function exportToPNG(element, filename, statusElement, options = {}) {
 	if (statusElement) statusElement.classList.remove('hidden');
 
-	const originalTransform = element.style.transform;
-	const originalTransition = element.style.transition;
-
 	try {
 		const snapshot = await captureMapSnapshot();
 		const targetWidth = state.width;
@@ -184,7 +164,6 @@ export async function exportToPNG(element, filename, statusElement, options = {}
 			try { await document.fonts.ready; } catch (e) { }
 		}
 
-		const posterScalerEl = document.getElementById('poster-scaler');
 		const posterContainerEl = document.getElementById('poster-container');
 		const logicalContainerWidth = posterContainerEl ? (posterContainerEl.offsetWidth || targetWidth) : targetWidth;
 		const logicalContainerHeight = posterContainerEl ? (posterContainerEl.offsetHeight || targetHeight) : targetHeight;
