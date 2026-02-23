@@ -11,7 +11,8 @@ export const artisticThemes = {
 		road_secondary: "#34D399",
 		road_tertiary: "#10B981",
 		road_residential: "#065F46",
-		road_default: "#34D399"
+		road_default: "#34D399",
+		route: "#EF4444"
 	},
 	arctic_frost: {
 		name: "Arctic Frost",
@@ -25,7 +26,8 @@ export const artisticThemes = {
 		road_secondary: "#7DD3FC",
 		road_tertiary: "#BAE6FD",
 		road_residential: "#E0F2FE",
-		road_default: "#7DD3FC"
+		road_default: "#7DD3FC",
+		route: "#F97316"
 	},
 	arid_canyon: {
 		name: "Arid Canyon",
@@ -39,7 +41,8 @@ export const artisticThemes = {
 		road_secondary: "#EA580C",
 		road_tertiary: "#F97316",
 		road_residential: "#FDE68A",
-		road_default: "#EA580C"
+		road_default: "#EA580C",
+		route: "#22D3EE"
 	},
 	aurora_glow: {
 		name: "Aurora Glow",
@@ -53,7 +56,8 @@ export const artisticThemes = {
 		road_secondary: "#3BD6B6",
 		road_tertiary: "#2FAF95",
 		road_residential: "#1F7F6A",
-		road_default: "#3BD6B6"
+		road_default: "#3BD6B6",
+		route: "#F472B6"
 	},
 	autumn_whisper: {
 		name: "Autumn Whisper",
@@ -67,7 +71,8 @@ export const artisticThemes = {
 		road_secondary: "#FCD34D",
 		road_tertiary: "#FDE68A",
 		road_residential: "#FEF3C7",
-		road_default: "#FBBF24"
+		road_default: "#FBBF24",
+		route: "#3B82F6"
 	},
 	blueprint_classic: {
 		name: "Blueprint Classic",
@@ -81,7 +86,8 @@ export const artisticThemes = {
 		road_secondary: "#93C5FD",
 		road_tertiary: "#60A5FA",
 		road_residential: "#3B82F6",
-		road_default: "#93C5FD"
+		road_default: "#93C5FD",
+		route: "#FACC15"
 	},
 	charcoal_sketch: {
 		name: "Charcoal Sketch",
@@ -95,7 +101,8 @@ export const artisticThemes = {
 		road_secondary: "#4B5563",
 		road_tertiary: "#6B7280",
 		road_residential: "#F3F4F6",
-		road_default: "#4B5563"
+		road_default: "#4B5563",
+		route: "#EF4444"
 	},
 	copper_patina: {
 		name: "Copper Patina",
@@ -109,7 +116,8 @@ export const artisticThemes = {
 		road_secondary: "#B45309",
 		road_tertiary: "#D97706",
 		road_residential: "#115E59",
-		road_default: "#2DD4BF"
+		road_default: "#2DD4BF",
+		route: "#FACC15"
 	},
 	cyber_glitch: {
 		name: "Cyber Glitch",
@@ -123,7 +131,8 @@ export const artisticThemes = {
 		road_secondary: "#A855F7",
 		road_tertiary: "#C084FC",
 		road_residential: "#D8B4FE",
-		road_default: "#A855F7"
+		road_default: "#A855F7",
+		route: "#22D3EE"
 	},
 	cyber_noir: {
 		name: "Cyber Noir",
@@ -138,7 +147,8 @@ export const artisticThemes = {
 		road_secondary: "#00BEBE",
 		road_tertiary: "#008F95",
 		road_residential: "#005E66",
-		road_default: "#008F95"
+		road_default: "#008F95",
+		route: "#EAB308"
 	},
 	desert_mirage: {
 		name: "Desert Mirage",
@@ -152,7 +162,8 @@ export const artisticThemes = {
 		road_secondary: "#F59E0B",
 		road_tertiary: "#FB7185",
 		road_residential: "#FFEDD5",
-		road_default: "#F59E0B"
+		road_default: "#F59E0B",
+		route: "#3B82F6"
 	},
 	deep_ocean: {
 		name: "Deep Ocean",
@@ -166,7 +177,8 @@ export const artisticThemes = {
 		road_secondary: "#7DD3FC",
 		road_tertiary: "#BAE6FD",
 		road_residential: "#0C4A6E",
-		road_default: "#38BDF8"
+		road_default: "#38BDF8",
+		route: "#FACC15"
 	},
 	dark_gold: {
 		name: "Dark Gold",
@@ -180,7 +192,8 @@ export const artisticThemes = {
 		road_secondary: "#A3752B",
 		road_tertiary: "#8B5E3C",
 		road_residential: "#2F2B23",
-		road_default: "#A3752B"
+		road_default: "#A3752B",
+		route: "#22D3EE"
 	},
 	emerald_valley: {
 		name: "Emerald Valley",
@@ -194,7 +207,8 @@ export const artisticThemes = {
 		road_secondary: "#059669",
 		road_tertiary: "#047857",
 		road_residential: "#064E3B",
-		road_default: "#059669"
+		road_default: "#059669",
+		route: "#F97316"
 	},
 	ethereal_ghost: {
 		name: "Ethereal Ghost",
@@ -208,7 +222,8 @@ export const artisticThemes = {
 		road_secondary: "#A3A3A3",
 		road_tertiary: "#D4D4D4",
 		road_residential: "#F5F5F5",
-		road_default: "#A3A3A3"
+		road_default: "#A3A3A3",
+		route: "#3B82F6"
 	},
 	forest_shadow: {
 		name: "Forest Shadow",
@@ -222,7 +237,8 @@ export const artisticThemes = {
 		road_secondary: "#059669",
 		road_tertiary: "#047857",
 		road_residential: "#064E3B",
-		road_default: "#059669"
+		road_default: "#059669",
+		route: "#EF4444"
 	},
 	golden_era: {
 		name: "Golden Era",
@@ -236,7 +252,8 @@ export const artisticThemes = {
 		road_secondary: "#CA8A04",
 		road_tertiary: "#EAB308",
 		road_residential: "#FACC15",
-		road_default: "#CA8A04"
+		road_default: "#CA8A04",
+		route: "#3B82F6"
 	},
 	lavender_mist: {
 		name: "Lavender Mist",
@@ -250,7 +267,8 @@ export const artisticThemes = {
 		road_secondary: "#7C3AED",
 		road_tertiary: "#8B5CF6",
 		road_residential: "#A78BFA",
-		road_default: "#7C3AED"
+		road_default: "#7C3AED",
+		route: "#10B981"
 	},
 	mint_fizz: {
 		name: "Mint Fizz",
@@ -264,7 +282,8 @@ export const artisticThemes = {
 		road_secondary: "#4ADE80",
 		road_tertiary: "#86EFAC",
 		road_residential: "#D1FAE5",
-		road_default: "#4ADE80"
+		road_default: "#4ADE80",
+		route: "#EF4444"
 	},
 	midnight_neon: {
 		name: "Midnight Neon",
@@ -278,7 +297,8 @@ export const artisticThemes = {
 		road_secondary: "#FF00C8",
 		road_tertiary: "#9B7CFF",
 		road_residential: "#6EE7B7",
-		road_default: "#00E5FF"
+		road_default: "#00E5FF",
+		route: "#FFFF00"
 	},
 	monochrome_pro: {
 		name: "Monochrome Pro",
@@ -292,7 +312,8 @@ export const artisticThemes = {
 		road_secondary: "#52525B",
 		road_tertiary: "#71717A",
 		road_residential: "#A1A1AA",
-		road_default: "#52525B"
+		road_default: "#52525B",
+		route: "#EF4444"
 	},
 	mangrove_maze: {
 		name: "Mangrove Maze",
@@ -306,7 +327,8 @@ export const artisticThemes = {
 		road_secondary: "#4D7C0F",
 		road_tertiary: "#3F6212",
 		road_residential: "#1A2E05",
-		road_default: "#4D7C0F"
+		road_default: "#4D7C0F",
+		route: "#F472B6"
 	},
 	paper_heritage: {
 		name: "Paper Heritage",
@@ -320,7 +342,8 @@ export const artisticThemes = {
 		road_secondary: "#B77A3A",
 		road_tertiary: "#D29A55",
 		road_residential: "#F1E2CF",
-		road_default: "#B77A3A"
+		road_default: "#B77A3A",
+		route: "#3B82F6"
 	},
 	riverine_flow: {
 		name: "Riverine Flow",
@@ -334,7 +357,8 @@ export const artisticThemes = {
 		road_secondary: "#67E8F9",
 		road_tertiary: "#A5F3FC",
 		road_residential: "#E0F2FE",
-		road_default: "#22D3EE"
+		road_default: "#22D3EE",
+		route: "#F97316"
 	},
 	retro_synth: {
 		name: "Retro Synth",
@@ -348,7 +372,8 @@ export const artisticThemes = {
 		road_secondary: "#BD00FF",
 		road_tertiary: "#7000FF",
 		road_residential: "#4B0082",
-		road_default: "#BD00FF"
+		road_default: "#BD00FF",
+		route: "#FFFF00"
 	},
 	royal_velvet: {
 		name: "Royal Velvet",
@@ -362,7 +387,8 @@ export const artisticThemes = {
 		road_secondary: "#A855F7",
 		road_tertiary: "#C084FC",
 		road_residential: "#581C87",
-		road_default: "#A855F7"
+		road_default: "#A855F7",
+		route: "#22D3EE"
 	},
 	rustic_clay: {
 		name: "Rustic Clay",
@@ -376,7 +402,8 @@ export const artisticThemes = {
 		road_secondary: "#EA580C",
 		road_tertiary: "#F97316",
 		road_residential: "#FB923C",
-		road_default: "#EA580C"
+		road_default: "#EA580C",
+		route: "#3B82F6"
 	},
 	sakura_bloom: {
 		name: "Sakura Bloom",
@@ -390,7 +417,8 @@ export const artisticThemes = {
 		road_secondary: "#F9A8D4",
 		road_tertiary: "#F472B6",
 		road_residential: "#FFF5F7",
-		road_default: "#F9A8D4"
+		road_default: "#F9A8D4",
+		route: "#10B981"
 	},
 	solar_flare: {
 		name: "Solar Flare",
@@ -404,7 +432,8 @@ export const artisticThemes = {
 		road_secondary: "#EA580C",
 		road_tertiary: "#9A3412",
 		road_residential: "#44403C",
-		road_default: "#EA580C"
+		road_default: "#EA580C",
+		route: "#22D3EE"
 	},
 	steel_metropolis: {
 		name: "Steel Metropolis",
@@ -418,7 +447,8 @@ export const artisticThemes = {
 		road_secondary: "#CBD5E1",
 		road_tertiary: "#94A3B8",
 		road_residential: "#64748B",
-		road_default: "#CBD5E1"
+		road_default: "#CBD5E1",
+		route: "#F97316"
 	},
 	sunset_blush: {
 		name: "Sunset Blush",
@@ -432,7 +462,8 @@ export const artisticThemes = {
 		road_secondary: "#FF8FA3",
 		road_tertiary: "#FFB4C6",
 		road_residential: "#FFECEC",
-		road_default: "#FF6B6B"
+		road_default: "#FF6B6B",
+		route: "#10B981"
 	},
 	volcanic_ash: {
 		name: "Volcanic Ash",
@@ -446,6 +477,7 @@ export const artisticThemes = {
 		road_secondary: "#B91C1C",
 		road_tertiary: "#7F1D1D",
 		road_residential: "#450A0A",
-		road_default: "#B91C1C"
+		road_default: "#B91C1C",
+		route: "#FACC15"
 	}
 };

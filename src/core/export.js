@@ -53,20 +53,46 @@ async function captureMapSnapshot() {
 				const mapCanvas = artisticMap.getCanvas();
 				ctx.drawImage(mapCanvas, 0, 0, canvas.width, canvas.height);
 
-				if (state.showMarker) {
+				if (state.showMarker && state.markers && state.markers.length > 0) {
 					const zoom = artisticMap.getZoom();
 					const center = artisticMap.getCenter();
 					const scale = Math.pow(2, zoom) * 512;
 					const centerPoint = project(center.lat, center.lng, scale);
-					const markerPoint = project(state.markerLat, state.markerLon, scale);
-
-					const x = (canvas.width / 2) + (markerPoint.x - centerPoint.x);
-					const y = (canvas.height / 2) + (markerPoint.y - centerPoint.y);
 
 					const theme = getSelectedArtisticTheme();
 					const color = theme.road_primary || theme.text || '#0f172a';
 
-					await drawMarkerToCtx(ctx, x, y, color);
+					for (const markerData of state.markers) {
+						const markerPoint = project(markerData.lat, markerData.lon, scale);
+						const x = (canvas.width / 2) + (markerPoint.x - centerPoint.x);
+						const y = (canvas.height / 2) + (markerPoint.y - centerPoint.y);
+						await drawMarkerToCtx(ctx, x, y, color);
+					}
+				}
+
+				if (state.showRoute) {
+					const zoom = artisticMap.getZoom();
+					const center = artisticMap.getCenter();
+					const scale = Math.pow(2, zoom) * 512;
+					const centerPoint = project(center.lat, center.lng, scale);
+
+					const theme = getSelectedArtisticTheme();
+					const color = theme.route || '#EF4444';
+					const themeBg = theme.bg || '#ffffff';
+
+					const geometry = (state.routeGeometry && state.routeGeometry.length > 0)
+						? state.routeGeometry
+						: [[state.routeStartLon, state.routeStartLat], [state.routeEndLon, state.routeEndLat]];
+
+					const points = geometry.map(c => {
+						const p = project(c[1], c[0], scale);
+						return {
+							x: (canvas.width / 2) + (p.x - centerPoint.x),
+							y: (canvas.height / 2) + (p.y - centerPoint.y)
+						};
+					});
+
+					drawComplexRouteToCtx(ctx, points, color, themeBg);
 				}
 
 				const data = canvas.toDataURL('image/png');
@@ -101,21 +127,48 @@ async function captureMapSnapshot() {
 				}
 			});
 
-			if (state.showMarker) {
+			if (state.showMarker && state.markers && state.markers.length > 0) {
 				const map = getMapInstance();
 				const zoom = map.getZoom();
 				const center = map.getCenter();
 				const scaleMap = Math.pow(2, zoom) * 256;
 				const centerPoint = project(center.lat, center.lng, scaleMap);
-				const markerPoint = project(state.markerLat, state.markerLon, scaleMap);
-
-				const x = (canvas.width / 2) + (markerPoint.x - centerPoint.x);
-				const y = (canvas.height / 2) + (markerPoint.y - centerPoint.y);
 
 				const theme = getSelectedTheme();
 				const color = theme.text || theme.textColor || '#0f172a';
 
-				await drawMarkerToCtx(ctx, x, y, color);
+				for (const markerData of state.markers) {
+					const markerPoint = project(markerData.lat, markerData.lon, scaleMap);
+					const x = (canvas.width / 2) + (markerPoint.x - centerPoint.x);
+					const y = (canvas.height / 2) + (markerPoint.y - centerPoint.y);
+					await drawMarkerToCtx(ctx, x, y, color);
+				}
+			}
+
+			if (state.showRoute) {
+				const map = getMapInstance();
+				const zoom = map.getZoom();
+				const center = map.getCenter();
+				const scaleMap = Math.pow(2, zoom) * 256;
+				const centerPoint = project(center.lat, center.lng, scaleMap);
+
+				const theme = getSelectedTheme();
+				const themeBg = theme.bg || theme.backgroundColor || '#ffffff';
+
+				const via = state.routeViaPoints || [];
+				const geometry = (state.routeGeometry && state.routeGeometry.length > 0)
+					? state.routeGeometry
+					: [[state.routeStartLon, state.routeStartLat], ...via.map(p => [p.lon, p.lat]), [state.routeEndLon, state.routeEndLat]];
+
+				const points = geometry.map(c => {
+					const p = project(c[1], c[0], scaleMap);
+					return {
+						x: (canvas.width / 2) + (p.x - centerPoint.x),
+						y: (canvas.height / 2) + (p.y - centerPoint.y)
+					};
+				});
+
+				drawComplexRouteToCtx(ctx, points, '#EF4444', themeBg);
 			}
 
 			return canvas.toDataURL('image/png');
@@ -124,6 +177,65 @@ async function captureMapSnapshot() {
 		}
 	}
 	return null;
+}
+
+function drawComplexRouteToCtx(ctx, points, color, themeBg = '#ffffff') {
+	if (!points || points.length < 2) return;
+
+	ctx.beginPath();
+	ctx.moveTo(points[0].x, points[0].y);
+	for (let i = 1; i < points.length; i++) {
+		ctx.lineTo(points[i].x, points[i].y);
+	}
+	ctx.strokeStyle = themeBg;
+	ctx.lineWidth = 20;
+	ctx.lineCap = 'round';
+	ctx.lineJoin = 'round';
+	ctx.stroke();
+
+	ctx.save();
+	ctx.shadowBlur = 15;
+	ctx.shadowColor = color;
+	ctx.strokeStyle = color;
+	ctx.lineWidth = 12;
+	ctx.globalAlpha = 0.4;
+	ctx.stroke();
+	ctx.restore();
+
+	ctx.beginPath();
+	ctx.moveTo(points[0].x, points[0].y);
+	for (let i = 1; i < points.length; i++) {
+		ctx.lineTo(points[i].x, points[i].y);
+	}
+	ctx.strokeStyle = color;
+	ctx.lineWidth = 8;
+	ctx.lineCap = 'round';
+	ctx.lineJoin = 'round';
+	ctx.globalAlpha = 1.0;
+	ctx.stroke();
+
+	const drawPoint = (x, y, label) => {
+		ctx.beginPath();
+		ctx.arc(x, y, 14, 0, Math.PI * 2);
+		ctx.fillStyle = '#ffffff';
+		ctx.shadowColor = 'rgba(0,0,0,0.3)';
+		ctx.shadowBlur = 10;
+		ctx.fill();
+		ctx.shadowBlur = 0;
+
+		ctx.strokeStyle = '#0f172a';
+		ctx.lineWidth = 2;
+		ctx.stroke();
+
+		ctx.fillStyle = '#0f172a';
+		ctx.font = 'black 12px sans-serif';
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'middle';
+		ctx.fillText(label, x, y);
+	};
+
+	drawPoint(points[0].x, points[0].y, 'A');
+	drawPoint(points[points.length - 1].x, points[points.length - 1].y, 'B');
 }
 
 async function drawMarkerToCtx(ctx, x, y, color) {

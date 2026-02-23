@@ -8,7 +8,9 @@ import {
 	invalidateMapSize,
 	updateArtisticStyle,
 	updateMapTheme,
-	updateMarkerStyles
+	updateMarkerStyles,
+	updateRouteStyles,
+	updateRouteGeometry
 } from '../map/map-init.js';
 import { searchLocation, formatCoords } from '../map/geocoder.js';
 
@@ -79,6 +81,7 @@ export function setupControls() {
 				if (state.renderMode === 'artistic') {
 					const theme = getSelectedArtisticTheme();
 					updateArtisticStyle(theme);
+					updateRouteStyles(state);
 				}
 			});
 		});
@@ -96,7 +99,9 @@ export function setupControls() {
 
 	const labelsToggle = document.getElementById('show-labels-toggle');
 	const markerToggle = document.getElementById('show-marker-toggle');
+	const routeToggle = document.getElementById('show-route-toggle');
 	const markerSettings = document.getElementById('marker-settings');
+	const routeSettings = document.getElementById('route-settings');
 	const markerIconSelect = document.getElementById('marker-icon-select');
 	const markerSizeSlider = document.getElementById('marker-size-slider');
 	const markerSizeValue = document.getElementById('marker-size-value');
@@ -258,6 +263,7 @@ export function setupControls() {
 				if (state.renderMode === 'artistic') {
 					const theme = getSelectedArtisticTheme();
 					updateArtisticStyle(theme);
+					updateRouteStyles(state);
 				}
 				if (artisticModal) artisticModal.classList.remove('show');
 			});
@@ -402,16 +408,23 @@ export function setupControls() {
 		const name = item.dataset.name;
 		const country = item.dataset.country;
 
+		const newMarkers = [...(state.markers || [])];
+		if (newMarkers.length > 0) {
+			newMarkers[0] = { lat, lon };
+		} else {
+			newMarkers.push({ lat, lon });
+		}
+
 		updateState({
 			city: (name || '').toUpperCase(),
 			country: (country || '').toUpperCase(),
 			lat,
 			lon,
-			markerLat: lat,
-			markerLon: lon
+			markers: newMarkers
 		});
 
 		updateMapPosition(lat, lon);
+		updateMarkerStyles(state);
 
 		searchInput.value = name;
 		searchResults.classList.add('hidden');
@@ -434,14 +447,20 @@ export function setupControls() {
 
 	latInput.addEventListener('change', (e) => {
 		const lat = parseFloat(e.target.value);
-		updateState({ lat, markerLat: lat });
+		const newMarkers = [...(state.markers || [])];
+		if (newMarkers.length > 0) newMarkers[0].lat = lat;
+		updateState({ lat, markers: newMarkers });
 		updateMapPosition(lat, state.lon);
+		updateMarkerStyles(state);
 	});
 
 	lonInput.addEventListener('change', (e) => {
 		const lon = parseFloat(e.target.value);
-		updateState({ lon, markerLon: lon });
+		const newMarkers = [...(state.markers || [])];
+		if (newMarkers.length > 0) newMarkers[0].lon = lon;
+		updateState({ lon, markers: newMarkers });
 		updateMapPosition(state.lat, lon);
+		updateMarkerStyles(state);
 	});
 
 	if (cityOverrideInput) {
@@ -523,8 +542,14 @@ export function setupControls() {
 		updateMapPosition(undefined, undefined, zoom);
 	});
 
-	modeTile.addEventListener('click', () => updateState({ renderMode: 'tile' }));
-	modeArtistic.addEventListener('click', () => updateState({ renderMode: 'artistic' }));
+	modeTile.addEventListener('click', () => {
+		updateState({ renderMode: 'tile' });
+		updateRouteStyles(state);
+	});
+	modeArtistic.addEventListener('click', () => {
+		updateState({ renderMode: 'artistic' });
+		updateRouteStyles(state);
+	});
 
 	let _themeChangeTimer = null;
 	function applyThemeChange(value) {
@@ -533,6 +558,7 @@ export function setupControls() {
 			const t = getSelectedTheme();
 			if (t && t.tileUrl) updateMapTheme(t.tileUrl);
 			invalidateMapSize();
+			updateRouteStyles(state);
 		}
 	}
 
@@ -556,10 +582,81 @@ export function setupControls() {
 	if (markerToggle) {
 		markerToggle.addEventListener('change', (e) => {
 			const show = e.target.checked;
+			if (show) {
+				if (!state.markers || state.markers.length === 0) {
+					updateState({
+						markers: [{ lat: state.lat, lon: state.lon }]
+					});
+				}
+			}
 			updateState({ showMarker: show });
 			updateMarkerStyles(state);
 			const settings = document.getElementById('marker-settings');
 			if (settings) settings.classList.toggle('hidden', !show);
+		});
+	}
+
+	const addMarkerBtn = document.getElementById('add-marker-btn');
+	if (addMarkerBtn) {
+		addMarkerBtn.addEventListener('click', () => {
+			const newMarkers = [...(state.markers || [])];
+			newMarkers.push({ lat: state.lat, lon: state.lon });
+			updateState({ markers: newMarkers });
+			updateMarkerStyles(state);
+		});
+	}
+
+	const removeMarkerBtn = document.getElementById('remove-marker-btn');
+	if (removeMarkerBtn) {
+		removeMarkerBtn.addEventListener('click', () => {
+			const newMarkers = [...(state.markers || [])];
+			if (newMarkers.length > 0) {
+				newMarkers.pop();
+				updateState({ markers: newMarkers });
+				updateMarkerStyles(state);
+			}
+		});
+	}
+
+	const clearMarkersBtn = document.getElementById('clear-markers-btn');
+	if (clearMarkersBtn) {
+		clearMarkersBtn.addEventListener('click', () => {
+			updateState({ markers: [], showMarker: false });
+			if (markerToggle) markerToggle.checked = false;
+			updateMarkerStyles(state);
+			const settings = document.getElementById('marker-settings');
+			if (settings) settings.classList.add('hidden');
+		});
+	}
+
+	if (routeToggle) {
+		routeToggle.addEventListener('change', async (e) => {
+			const show = e.target.checked;
+
+			if (show) {
+				updateState({
+					routeStartLat: state.lat,
+					routeStartLon: state.lon,
+					routeEndLat: state.lat - 0.005,
+					routeEndLon: state.lon + 0.005,
+					routeViaPoints: []
+				});
+				await updateRouteGeometry();
+			}
+
+			updateState({ showRoute: show });
+			const settings = document.getElementById('route-settings');
+			if (settings) settings.classList.toggle('hidden', !show);
+			updateRouteStyles(state);
+		});
+	}
+
+	const resetRouteBtn = document.getElementById('reset-route-btn');
+	if (resetRouteBtn) {
+		resetRouteBtn.addEventListener('click', async () => {
+			updateState({ routeViaPoints: [] });
+			await updateRouteGeometry();
+			updateRouteStyles(state);
 		});
 	}
 
@@ -791,6 +888,30 @@ export function setupControls() {
 		artisticDesc.textContent = artisticTheme.description;
 
 		if (labelsToggle) labelsToggle.checked = !!currentState.showLabels;
+		if (markerToggle) {
+			markerToggle.checked = !!currentState.showMarker;
+			const settings = document.getElementById('marker-settings');
+			if (settings) settings.classList.toggle('hidden', !currentState.showMarker);
+		}
+
+		const markerCountDisplay = document.getElementById('marker-count');
+		if (markerCountDisplay) {
+			markerCountDisplay.textContent = (currentState.markers || []).length;
+		}
+
+		if (markerIconSelect) markerIconSelect.value = currentState.markerIcon || 'pin';
+		if (markerSizeSlider) {
+			const size = Math.round((currentState.markerSize || 1) * 40);
+			markerSizeSlider.value = size;
+			if (markerSizeValue) markerSizeValue.textContent = `${size}px`;
+		}
+
+		if (routeToggle) {
+			routeToggle.checked = !!currentState.showRoute;
+			const settings = document.getElementById('route-settings');
+			if (settings) settings.classList.toggle('hidden', !currentState.showRoute);
+		}
+
 		if (overlayBgButtons && overlayBgButtons.length) {
 			overlayBgButtons.forEach(b => {
 				const style = b.dataset.bg;
@@ -901,6 +1022,9 @@ let lastHeight = null;
 let lastMatEnabled = null;
 let lastMatWidth = null;
 
+let _lastArtisticTheme = null;
+let _lastRenderMode = null;
+
 export function updatePreviewStyles(currentState) {
 	const posterContainer = document.getElementById('poster-container');
 	const posterScaler = document.getElementById('poster-scaler');
@@ -935,13 +1059,18 @@ export function updatePreviewStyles(currentState) {
 		mapPreview.style.pointerEvents = 'none';
 		artisticMapDiv.style.visibility = 'visible';
 		artisticMapDiv.style.pointerEvents = 'auto';
-		updateArtisticStyle(artisticTheme);
+
+		if (_lastRenderMode !== 'artistic' || _lastArtisticTheme !== currentState.artisticTheme) {
+			updateArtisticStyle(artisticTheme);
+		}
 	} else {
 		mapPreview.style.visibility = 'visible';
 		mapPreview.style.pointerEvents = 'auto';
 		artisticMapDiv.style.visibility = 'hidden';
 		artisticMapDiv.style.pointerEvents = 'none';
 	}
+	_lastRenderMode = currentState.renderMode;
+	_lastArtisticTheme = currentState.artisticTheme;
 
 	[mapPreview, artisticMapDiv].forEach(el => {
 		if (el) {

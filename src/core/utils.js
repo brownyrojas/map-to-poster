@@ -18,3 +18,42 @@ export function hexToRgba(color, alpha = 1) {
 	const b = parseInt(h.substring(4, 6), 16);
 	return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
+
+export function findBestInsertIndex(lat, lon, routePoints) {
+	if (routePoints.length < 2) return 0;
+
+	let bestIndex = 0;
+	let minDistance = Infinity;
+
+	for (let i = 0; i < routePoints.length - 1; i++) {
+		const p1 = routePoints[i];
+		const p2 = routePoints[i + 1];
+
+		const dist = getSqSegDist(lat, lon, p1.lat, p1.lon, p2.lat, p2.lon);
+
+		if (dist < minDistance) {
+			minDistance = dist;
+			bestIndex = i;
+		}
+	}
+
+	return bestIndex;
+}
+
+export function getSqSegDist(px, py, x1, y1, x2, y2) {
+	let dx = x2 - x1;
+	let dy = y2 - y1;
+	if (dx !== 0 || dy !== 0) {
+		let t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy);
+		if (t > 1) {
+			x1 = x2;
+			y1 = y2;
+		} else if (t > 0) {
+			x1 += dx * t;
+			y1 += dy * t;
+		}
+	}
+	dx = px - x1;
+	dy = py - y1;
+	return dx * dx + dy * dy;
+}

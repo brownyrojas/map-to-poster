@@ -3,6 +3,17 @@ import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
 
 export default defineConfig({
+	esbuild: {
+		target: 'esnext',
+	},
+	optimizeDeps: {
+		esbuildOptions: {
+			target: 'esnext',
+		},
+	},
+	build: {
+		target: 'esnext',
+	},
 	css: {
 		postcss: {
 			plugins: [

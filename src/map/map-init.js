@@ -1,18 +1,23 @@
 import L from 'leaflet';
 import maplibregl from 'maplibre-gl';
-import { updateState, getSelectedTheme, getSelectedArtisticTheme } from '../core/state.js';
+import { state, updateState } from '../core/state.js';
 import { markerIcons } from '../core/marker-icons.js';
+import { findBestInsertIndex } from '../core/utils.js';
+import { updateRouteGeometry, syncRouteMarkers } from './route-manager.js';
+import { generateMapLibreStyle } from './artistic-style.js';
+import { clearMarkers } from './marker-manager.js';
 
 let map = null;
 let tileLayer = null;
-let marker = null;
 let artisticMap = null;
-let artisticMarker = null;
 let currentArtisticThemeName = null;
 let isSyncing = false;
 let styleChangeInProgress = false;
 let pendingArtisticStyle = null;
 let pendingArtisticThemeName = null;
+
+export const getMap = () => map;
+export const getArtisticMap = () => artisticMap;
 
 export function initMap(containerId, initialCenter, initialZoom, initialTileUrl) {
 	map = L.map(containerId, {
@@ -26,24 +31,6 @@ export function initMap(containerId, initialCenter, initialZoom, initialTileUrl)
 		maxZoom: 19,
 		crossOrigin: true,
 	}).addTo(map);
-
-	const customIcon = L.divIcon({
-		className: 'custom-marker',
-		html: markerIcons.pin,
-		iconSize: [40, 40],
-		iconAnchor: [20, 20]
-	});
-	marker = L.marker(initialCenter, {
-		icon: customIcon,
-		draggable: true,
-		autoPan: true
-	});
-
-	marker.on('dragend', () => {
-		const pos = marker.getLatLng();
-		updateState({ markerLat: pos.lat, markerLon: pos.lng });
-		if (artisticMarker) artisticMarker.setLngLat([pos.lng, pos.lat]);
-	});
 
 	map.on('moveend', () => {
 		if (isSyncing) return;
@@ -68,6 +55,10 @@ export function initMap(containerId, initialCenter, initialZoom, initialTileUrl)
 	});
 
 	initArtisticMap('artistic-map', [initialCenter[1], initialCenter[0]], initialZoom - 1);
+
+	if (state.showRoute) {
+		updateRouteGeometry();
+	}
 
 	return map;
 }
@@ -98,6 +89,7 @@ function initArtisticMap(containerId, center, zoom) {
 			styleChangeInProgress = false;
 		}
 	});
+
 	artisticMap.on('moveend', () => {
 		if (isSyncing) return;
 		isSyncing = true;
@@ -118,65 +110,61 @@ function initArtisticMap(containerId, center, zoom) {
 		isSyncing = false;
 	});
 
-	const el = document.createElement('div');
-	el.className = 'custom-marker';
-	el.innerHTML = markerIcons.pin;
-	artisticMarker = new maplibregl.Marker({ element: el, draggable: true })
-		.setLngLat(center);
+	artisticMap.on('mousedown', 'route-line', (e) => {
+		e.preventDefault();
+		const startPos = e.point;
+		let pointAdded = false;
+		let index = -1;
 
-	artisticMarker.on('dragend', () => {
-		const pos = artisticMarker.getLngLat();
-		updateState({ markerLat: pos.lat, markerLon: pos.lng });
-		if (marker) marker.setLatLng([pos.lat, pos.lng]);
+		isSyncing = true;
+		artisticMap.dragPan.disable();
+
+		const onMouseMove = (me) => {
+			const currentPos = me.point;
+			const dist = Math.sqrt(Math.pow(currentPos.x - startPos.x, 2) + Math.pow(currentPos.y - startPos.y, 2));
+
+			if (!pointAdded && dist > 5) {
+				const via = [...(state.routeViaPoints || [])];
+				const routePoints = [
+					{ lat: state.routeStartLat, lon: state.routeStartLon },
+					...via,
+					{ lat: state.routeEndLat, lon: state.routeEndLon }
+				];
+				index = findBestInsertIndex(me.lngLat.lat, me.lngLat.lng, routePoints);
+				via.splice(index, 0, { lat: me.lngLat.lat, lon: me.lngLat.lng });
+				updateState({ routeViaPoints: via });
+				pointAdded = true;
+			}
+
+			if (pointAdded && index !== -1) {
+				const v = [...state.routeViaPoints];
+				v[index] = { lat: me.lngLat.lat, lon: me.lngLat.lng };
+				updateState({ routeViaPoints: v });
+				syncRouteMarkers(false);
+			}
+		};
+
+		const onMouseUp = () => {
+			artisticMap.off('mousemove', onMouseMove);
+			artisticMap.off('mouseup', onMouseUp);
+			artisticMap.dragPan.enable();
+			isSyncing = false;
+			if (pointAdded) {
+				updateRouteGeometry();
+			}
+		};
+
+		artisticMap.on('mousemove', onMouseMove);
+		artisticMap.on('mouseup', onMouseUp);
 	});
-}
 
-function getIconAnchor(iconName, size) {
-	if (iconName === 'pin') return [size / 2, size];
-	return [size / 2, size / 2];
-}
+	artisticMap.on('mouseenter', 'route-line', () => {
+		artisticMap.getCanvas().style.cursor = 'crosshair';
+	});
 
-export function updateMarkerIcon(iconName, size) {
-	const html = markerIcons[iconName] || markerIcons.pin;
-	const anchor = getIconAnchor(iconName, size);
-
-	if (marker) {
-		const newIcon = L.divIcon({
-			className: 'custom-marker',
-			html: html,
-			iconSize: [size, size],
-			iconAnchor: anchor
-		});
-		marker.setIcon(newIcon);
-	}
-
-	if (artisticMarker) {
-		const el = artisticMarker.getElement();
-		el.innerHTML = html;
-		el.style.width = `${size}px`;
-		el.style.height = `${size}px`;
-
-	}
-}
-
-export function updateMarkerSize(size, iconName) {
-	updateMarkerIcon(iconName, size);
-}
-
-export function updateMarkerVisibility(show) {
-	if (marker) {
-		if (show) marker.addTo(map);
-		else marker.remove();
-	}
-	if (artisticMarker) {
-		if (show) artisticMarker.addTo(artisticMap);
-		else artisticMarker.remove();
-	}
-}
-
-export function updateMarkerPosition(lat, lon) {
-	if (marker) marker.setLatLng([lat, lon]);
-	if (artisticMarker) artisticMarker.setLngLat([lon, lat]);
+	artisticMap.on('mouseleave', 'route-line', () => {
+		artisticMap.getCanvas().style.cursor = '';
+	});
 }
 
 export function updateArtisticStyle(theme) {
@@ -202,88 +190,6 @@ export function updateArtisticStyle(theme) {
 	}
 }
 
-function generateMapLibreStyle(theme) {
-	return {
-		version: 8,
-		names: theme.name,
-		sources: {
-			openfreemap: {
-				type: 'vector',
-				url: 'https://tiles.openfreemap.org/planet'
-			}
-		},
-		layers: [
-			{
-				id: 'background',
-				type: 'background',
-				paint: { 'background-color': theme.bg }
-			},
-			{
-				id: 'water',
-				source: 'openfreemap',
-				'source-layer': 'water',
-				type: 'fill',
-				paint: { 'fill-color': theme.water }
-			},
-			{
-				id: 'park',
-				source: 'openfreemap',
-				'source-layer': 'park',
-				type: 'fill',
-				paint: { 'fill-color': theme.parks }
-			},
-			{
-				id: 'road-default',
-				source: 'openfreemap',
-				'source-layer': 'transportation',
-				type: 'line',
-				filter: ['!', ['match', ['get', 'class'], ['motorway', 'primary', 'secondary', 'tertiary', 'residential'], true, false]],
-				paint: { 'line-color': theme.road_default, 'line-width': 0.5 }
-			},
-			{
-				id: 'road-residential',
-				source: 'openfreemap',
-				'source-layer': 'transportation',
-				type: 'line',
-				filter: ['==', ['get', 'class'], 'residential'],
-				paint: { 'line-color': theme.road_residential, 'line-width': 0.5 }
-			},
-			{
-				id: 'road-tertiary',
-				source: 'openfreemap',
-				'source-layer': 'transportation',
-				type: 'line',
-				filter: ['==', ['get', 'class'], 'tertiary'],
-				paint: { 'line-color': theme.road_tertiary, 'line-width': 0.8 }
-			},
-			{
-				id: 'road-secondary',
-				source: 'openfreemap',
-				'source-layer': 'transportation',
-				type: 'line',
-				filter: ['==', ['get', 'class'], 'secondary'],
-				paint: { 'line-color': theme.road_secondary, 'line-width': 1.0 }
-			},
-			{
-				id: 'road-primary',
-				source: 'openfreemap',
-				'source-layer': 'transportation',
-				type: 'line',
-				filter: ['==', ['get', 'class'], 'primary'],
-				paint: { 'line-color': theme.road_primary, 'line-width': 1.5 }
-			},
-			{
-				id: 'road-motorway',
-				source: 'openfreemap',
-				'source-layer': 'transportation',
-				type: 'line',
-				filter: ['==', ['get', 'class'], 'motorway'],
-				paint: { 'line-color': theme.road_motorway, 'line-width': 2.0 }
-			}
-		]
-	};
-}
-
 export function updateMapPosition(lat, lon, zoom, options = { animate: true }) {
 	if (map) {
 		if (lat !== undefined && lon !== undefined) {
@@ -303,7 +209,6 @@ export function updateMapTheme(tileUrl) {
 export function waitForTilesLoad(timeout = 5000) {
 	return new Promise((resolve) => {
 		if (!map || !tileLayer) return resolve();
-
 		try {
 			if (tileLayer._tiles) {
 				const tiles = Object.values(tileLayer._tiles || {});
@@ -313,127 +218,33 @@ export function waitForTilesLoad(timeout = 5000) {
 				});
 				if (!anyLoading) return resolve();
 			}
-		} catch (e) {
-		}
+		} catch (e) { }
 
 		let resolved = false;
-		const onLoad = () => {
-			if (resolved) return;
-			resolved = true;
-			clearTimeout(timer);
-			resolve();
-		};
-
+		const onLoad = () => { if (!resolved) { resolved = true; clearTimeout(timer); resolve(); } };
 		tileLayer.once('load', onLoad);
-
-		const timer = setTimeout(() => {
-			if (resolved) return;
-			resolved = true;
-			resolve();
-		}, timeout);
+		const timer = setTimeout(() => { if (!resolved) { resolved = true; resolve(); } }, timeout);
 	});
 }
 
 export function waitForArtisticIdle(timeout = 2000) {
 	return new Promise((resolve) => {
 		if (!artisticMap) return resolve();
-
 		let resolved = false;
-		const onIdle = () => {
-			if (resolved) return;
-			resolved = true;
-			clearTimeout(timer);
-			resolve();
-		};
-
-		try {
-			artisticMap.once('idle', onIdle);
-		} catch (e) {
-			resolve();
-			return;
-		}
-
-		const timer = setTimeout(() => {
-			if (resolved) return;
-			resolved = true;
-			resolve();
-		}, timeout);
+		const onIdle = () => { if (!resolved) { resolved = true; clearTimeout(timer); resolve(); } };
+		try { artisticMap.once('idle', onIdle); } catch (e) { resolve(); return; }
+		const timer = setTimeout(() => { if (!resolved) { resolved = true; resolve(); } }, timeout);
 	});
 }
 
-export function getMapInstance() {
-	return map;
-}
-
-export function getArtisticMapInstance() {
-	return artisticMap;
-}
+export function getMapInstance() { return map; }
+export function getArtisticMapInstance() { return artisticMap; }
 
 export function invalidateMapSize() {
-	if (map) {
-		map.invalidateSize({ animate: false });
-	}
-	if (artisticMap) {
-		artisticMap.resize();
-	}
+	if (map) map.invalidateSize({ animate: false });
+	if (artisticMap) artisticMap.resize();
 }
 
-export function updateMarkerStyles(state) {
-	const iconType = state.markerIcon || 'pin';
-	const baseSize = 40;
-	const size = Math.round(baseSize * (state.markerSize || 1));
+export { updateRouteStyles, syncRouteMarkers, updateRouteGeometry } from './route-manager.js';
+export { updateMarkerStyles, updateMarkerIcon, updateMarkerSize, updateMarkerVisibility, updateMarkerPosition } from './marker-manager.js';
 
-	const isArtistic = state.renderMode === 'artistic';
-	const theme = isArtistic ? getSelectedArtisticTheme() : getSelectedTheme();
-	const color = isArtistic ? (theme.road_primary || theme.text || '#0f172a') : (theme.textColor || '#0f172a');
-
-	const html = (markerIcons[iconType] || markerIcons.pin)
-		.replace('class="marker-pin"', `style="width: ${size}px; height: ${size}px; color: ${color};"`);
-
-	const anchorX = size / 2;
-	const anchorY = iconType === 'pin' ? size : size / 2;
-
-	if (marker) {
-		if (state.showMarker) {
-			const icon = L.divIcon({
-				className: 'custom-marker',
-				html: html,
-				iconSize: [size, size],
-				iconAnchor: [anchorX, anchorY]
-			});
-			marker.setIcon(icon);
-			marker.setLatLng([state.markerLat, state.markerLon]);
-			if (!map.hasLayer(marker)) marker.addTo(map);
-		} else {
-			if (map.hasLayer(marker)) map.removeLayer(marker);
-		}
-	}
-
-	if (artisticMap) {
-		if (artisticMarker) {
-			artisticMarker.remove();
-		}
-
-		if (state.showMarker) {
-			const el = document.createElement('div');
-			el.className = 'custom-marker';
-			el.innerHTML = html;
-			el.style.width = `${size}px`;
-			el.style.height = `${size}px`;
-
-			artisticMarker = new maplibregl.Marker({
-				element: el,
-				draggable: true,
-				anchor: iconType === 'pin' ? 'bottom' : 'center'
-			})
-				.setLngLat([state.markerLon, state.markerLat])
-				.addTo(artisticMap);
-
-			artisticMarker.on('dragend', () => {
-				const pos = artisticMarker.getLngLat();
-				updateState({ markerLat: pos.lat, markerLon: pos.lng });
-				if (marker) marker.setLatLng([pos.lat, pos.lng]);
-			});
-		}
-	}
-}
