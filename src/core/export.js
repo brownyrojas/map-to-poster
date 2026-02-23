@@ -276,15 +276,22 @@ export async function exportToPNG(element, filename, statusElement, options = {}
 						vignette.style.pointerEvents = 'none';
 						vignette.style.zIndex = '5';
 
-				if (state.overlayBgType === 'vignette') {
-					vignette.style.display = 'block';
-					vignette.style.opacity = '1';
-					const colorSolid = hexToRgba(themeColor, 1);
-					const colorTrans = hexToRgba(themeColor, 0);
-					vignette.style.background = `linear-gradient(to bottom, ${colorSolid} 0%, ${colorSolid} 3%, ${colorTrans} 20%, ${colorTrans} 80%, ${colorSolid} 97%, ${colorSolid} 100%)`;
-				} else {
-					vignette.style.display = 'none';
-				}
+						const bgType = state.overlayBgType || 'vignette';
+						if (bgType === 'vignette') {
+							vignette.style.display = 'block';
+							vignette.style.opacity = '1';
+							const colorSolid = hexToRgba(themeColor, 1);
+							const colorTrans = hexToRgba(themeColor, 0);
+							vignette.style.background = `linear-gradient(to bottom, ${colorSolid} 0%, ${colorSolid} 3%, ${colorTrans} 20%, ${colorTrans} 80%, ${colorSolid} 97%, ${colorSolid} 100%)`;
+						} else if (bgType === 'radial') {
+							vignette.style.display = 'block';
+							vignette.style.opacity = '1';
+							const colorSolid = hexToRgba(themeColor, 1);
+							const colorTrans = hexToRgba(themeColor, 0);
+							vignette.style.background = `radial-gradient(circle, ${colorTrans} 0%, ${colorTrans} 20%, ${hexToRgba(themeColor, 0.4)} 70%, ${colorSolid} 100%)`;
+						} else {
+							vignette.style.display = 'none';
+						}
 					}
 				}
 

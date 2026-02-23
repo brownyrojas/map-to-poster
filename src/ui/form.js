@@ -1033,6 +1033,12 @@ export function updatePreviewStyles(currentState) {
 					const colorSolid = hexToRgba(colorNone, 1);
 					const colorTrans = hexToRgba(colorNone, 0);
 					vignetteOverlay.style.background = `linear-gradient(to bottom, ${colorSolid} 0%, ${colorSolid} 3%, ${colorTrans} 20%, ${colorTrans} 80%, ${colorSolid} 97%, ${colorSolid} 100%)`;
+				} else if (bgTypeNone === 'radial') {
+					vignetteOverlay.style.display = '';
+					vignetteOverlay.style.opacity = '1';
+					const colorSolid = hexToRgba(colorNone, 1);
+					const colorTrans = hexToRgba(colorNone, 0);
+					vignetteOverlay.style.background = `radial-gradient(circle, ${colorTrans} 0%, ${colorTrans} 20%, ${hexToRgba(colorNone, 0.4)} 70%, ${colorSolid} 100%)`;
 				} else {
 					vignetteOverlay.style.display = 'none';
 					vignetteOverlay.style.opacity = '0';
@@ -1103,6 +1109,12 @@ export function updatePreviewStyles(currentState) {
 					const colorSolid = hexToRgba(color, 1);
 					const colorTrans = hexToRgba(color, 0);
 					vignetteOverlay.style.background = `linear-gradient(to bottom, ${colorSolid} 0%, ${colorSolid} 3%, ${colorTrans} 20%, ${colorTrans} 80%, ${colorSolid} 97%, ${colorSolid} 100%)`;
+				} else if (bgType === 'radial') {
+					vignetteOverlay.style.display = '';
+					vignetteOverlay.style.opacity = '1';
+					const colorSolid = hexToRgba(color, 1);
+					const colorTrans = hexToRgba(color, 0);
+					vignetteOverlay.style.background = `radial-gradient(circle, ${colorTrans} 0%, ${colorTrans} 20%, ${hexToRgba(color, 0.4)} 70%, ${colorSolid} 100%)`;
 				} else {
 					vignetteOverlay.style.display = 'none';
 				}
