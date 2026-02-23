@@ -190,6 +190,21 @@ export function updateArtisticStyle(theme) {
 	}
 }
 
+export function updateArtisticLabels(showLabels) {
+	if (!artisticMap) return;
+	const visibility = showLabels ? 'visible' : 'none';
+	try {
+		if (artisticMap.getLayer('place-labels')) {
+			artisticMap.setLayoutProperty('place-labels', 'visibility', visibility);
+		}
+		if (artisticMap.getLayer('road-labels')) {
+			artisticMap.setLayoutProperty('road-labels', 'visibility', visibility);
+		}
+	} catch (e) {
+		console.error('Error updating artistic labels:', e);
+	}
+}
+
 export function updateMapPosition(lat, lon, zoom, options = { animate: true }) {
 	if (map) {
 		if (lat !== undefined && lon !== undefined) {

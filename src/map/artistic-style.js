@@ -90,6 +90,50 @@ export function generateMapLibreStyle(theme) {
 				paint: { 'line-color': theme.road_motorway, 'line-width': 2.0 }
 			},
 			{
+				id: 'place-labels',
+				source: 'openfreemap',
+				'source-layer': 'place',
+				type: 'symbol',
+				layout: {
+					'text-field': ['get', 'name'],
+					'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+					'text-size': 12,
+					'text-anchor': 'center',
+					'text-offset': [0, 0],
+					'visibility': state.showLabels ? 'visible' : 'none'
+				},
+				paint: {
+					'text-color': theme.text || '#000000',
+					'text-halo-color': theme.bg || '#ffffff',
+					'text-halo-width': 1.5,
+					'text-opacity': 0.8
+				}
+			},
+			{
+				id: 'road-labels',
+				source: 'openfreemap',
+				'source-layer': 'transportation_name',
+				type: 'symbol',
+				layout: {
+					'text-field': ['get', 'name'],
+					'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+					'text-size': 10,
+					'text-anchor': 'center',
+					'text-max-angle': 30,
+					'symbol-placement': 'line',
+					'symbol-spacing': 250,
+					'text-rotation-alignment': 'map',
+					'text-pitch-alignment': 'viewport',
+					'visibility': state.showLabels ? 'visible' : 'none'
+				},
+				paint: {
+					'text-color': theme.text || '#000000',
+					'text-halo-color': theme.bg || '#ffffff',
+					'text-halo-width': 1,
+					'text-opacity': 0.6
+				}
+			},
+			{
 				id: 'route-line-casing',
 				source: 'route-source',
 				type: 'line',

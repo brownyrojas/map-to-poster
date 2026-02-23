@@ -7,6 +7,7 @@ import {
 	updateMapPosition,
 	invalidateMapSize,
 	updateArtisticStyle,
+	updateArtisticLabels,
 	updateMapTheme,
 	updateMarkerStyles,
 	updateRouteStyles,
@@ -575,7 +576,11 @@ export function setupControls() {
 
 	if (labelsToggle) {
 		labelsToggle.addEventListener('change', (e) => {
-			updateState({ showLabels: e.target.checked });
+			const showLabels = e.target.checked;
+			updateState({ showLabels });
+			if (state.renderMode === 'artistic') {
+				updateArtisticLabels(showLabels);
+			}
 		});
 	}
 
@@ -1062,6 +1067,7 @@ export function updatePreviewStyles(currentState) {
 
 		if (_lastRenderMode !== 'artistic' || _lastArtisticTheme !== currentState.artisticTheme) {
 			updateArtisticStyle(artisticTheme);
+			updateArtisticLabels(currentState.showLabels);
 		}
 	} else {
 		mapPreview.style.visibility = 'visible';
