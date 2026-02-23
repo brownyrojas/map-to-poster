@@ -74,8 +74,10 @@ function initArtisticMap(containerId, center, zoom) {
 		preserveDrawingBuffer: true
 	});
 
-	artisticMap.scrollZoom.setWheelZoomRate(1);
-	artisticMap.scrollZoom.setZoomRate(1 / 600);
+	// Enable and make scroll zoom more sensitive with finer control
+	artisticMap.scrollZoom.enable();
+	artisticMap.scrollZoom.setWheelZoomRate(1 / 2000);
+	artisticMap.scrollZoom.setZoomRate(1 / 2000);
 
 	artisticMap.on('style.load', () => {
 		if (pendingArtisticStyle) {

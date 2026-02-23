@@ -37,21 +37,51 @@ async function captureMapSnapshot() {
 			try {
 				const originalWidth = artisticContainer.style.width;
 				const originalHeight = artisticContainer.style.height;
+				const originalDisplay = artisticContainer.style.display;
 
+				// Make container visible for rendering
+				artisticContainer.style.display = 'block';
 				artisticContainer.style.width = `${effectiveWidth}px`;
 				artisticContainer.style.height = `${effectiveHeight}px`;
 				artisticMap.resize();
 
+				// Wait for style to load and tiles to render
 				await new Promise(resolve => {
-					const timer = setTimeout(resolve, 1500);
-					artisticMap.once('idle', () => {
-						clearTimeout(timer);
-						resolve();
-					});
+					let resolved = false;
+					const timer = setTimeout(() => {
+						if (!resolved) {
+							resolved = true;
+							resolve();
+						}
+					}, 3000);
+
+					const onIdle = () => {
+						if (!resolved) {
+							resolved = true;
+							clearTimeout(timer);
+							resolve();
+						}
+					};
+
+					if (artisticMap.isStyleLoaded && artisticMap.isStyleLoaded() && artisticMap.areTilesLoaded?.() !== false) {
+						onIdle();
+					} else {
+						artisticMap.once('idle', onIdle);
+					}
 				});
 
+				// Additional render cycle to ensure canvas is ready
+				await new Promise(resolve => setTimeout(resolve, 100));
+
 				const mapCanvas = artisticMap.getCanvas();
-				ctx.drawImage(mapCanvas, 0, 0, canvas.width, canvas.height);
+				if (mapCanvas && mapCanvas.width > 0 && mapCanvas.height > 0) {
+					// Scale the map canvas to fit our target dimensions
+					const scaleX = canvas.width / mapCanvas.width;
+					const scaleY = canvas.height / mapCanvas.height;
+					ctx.scale(scaleX, scaleY);
+					ctx.drawImage(mapCanvas, 0, 0);
+					ctx.scale(1 / scaleX, 1 / scaleY);
+				}
 
 				if (state.showMarker && state.markers && state.markers.length > 0) {
 					const zoom = artisticMap.getZoom();
@@ -99,6 +129,7 @@ async function captureMapSnapshot() {
 
 				artisticContainer.style.width = originalWidth;
 				artisticContainer.style.height = originalHeight;
+				artisticContainer.style.display = originalDisplay;
 				artisticMap.resize();
 
 				return data;
